@@ -196,6 +196,18 @@ class UserSubjectCollection(ApiModel):
     subject: SlimSubject | None = None
 
 
+class PagedUserSubjectCollections(ApiModel):
+    total: int = 0
+    limit: int = 0
+    offset: int = 0
+    data: list[UserSubjectCollection] = Field(default_factory=list)
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _default_data(cls, value: Any) -> Any:
+        return [] if value is None else value
+
+
 class SubjectSearchFilter(ApiModel):
     subject_types: list[SubjectType] | None = Field(default=None, alias="type")
     meta_tags: list[str] | None = None

@@ -6,7 +6,13 @@ from urllib import error
 
 import pytest
 
-from bgmapi import BangumiApiError, BangumiClient, CollectionUpdate, SubjectCollectionType
+from bgmapi import (
+    BangumiApiError,
+    BangumiClient,
+    CollectionUpdate,
+    SubjectCollectionType,
+    SubjectType,
+)
 
 
 class _FakeResponse:
@@ -78,6 +84,79 @@ def test_collection_update_serializes_enum_values() -> None:
         "tags": ["动画"],
         "private": False,
     }
+
+
+def test_get_user_collections_sends_filters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        return _FakeResponse(
+            json.dumps(
+                {
+                    "total": 1,
+                    "limit": 20,
+                    "offset": 40,
+                    "data": [
+                        {
+                            "subject_id": 42,
+                            "subject_type": 2,
+                            "rate": 8,
+                            "type": 3,
+                            "comment": "追番中",
+                            "tags": ["机战"],
+                            "ep_status": 5,
+                            "vol_status": 0,
+                            "updated_at": "2022-08-06T19:43:23+08:00",
+                            "private": False,
+                            "subject": {
+                                "id": 42,
+                                "type": 2,
+                                "name": "Test Name",
+                                "name_cn": "测试条目",
+                                "short_summary": "summary",
+                                "date": "2020-01-01",
+                                "images": {
+                                    "large": "https://example.com/l.jpg",
+                                    "common": "https://example.com/c.jpg",
+                                    "medium": "https://example.com/m.jpg",
+                                    "small": "https://example.com/s.jpg",
+                                    "grid": "https://example.com/g.jpg",
+                                },
+                                "volumes": 0,
+                                "eps": 12,
+                                "collection_total": 100,
+                                "score": 7.5,
+                                "rank": 500,
+                                "tags": [{"name": "机战", "count": 10}],
+                            },
+                        }
+                    ],
+                }
+            )
+        )
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(user_agent="tester/bgmapi")
+    result = client.get_user_collections(
+        "sai",
+        subject_type=SubjectType.ANIME,
+        collection_type=SubjectCollectionType.DOING,
+        limit=20,
+        offset=40,
+    )
+
+    assert (
+        captured["url"]
+        == "https://api.bgm.tv/v0/users/sai/collections?limit=20&offset=40&subject_type=2&type=3"
+    )
+    assert result.total == 1
+    assert result.data[0].type == SubjectCollectionType.DOING
+    assert result.data[0].subject is not None
+    assert result.data[0].subject.name_cn == "测试条目"
 
 
 def test_http_error_is_raised_with_parsed_details(

@@ -10,9 +10,12 @@ from .models import (
     CollectionUpdate,
     CurrentUser,
     PagedSubjects,
+    PagedUserSubjectCollections,
     SearchSort,
     Subject,
+    SubjectCollectionType,
     SubjectSearchFilter,
+    SubjectType,
     UserSubjectCollection,
 )
 
@@ -88,6 +91,27 @@ class BangumiClient:
             f"/v0/users/{parse.quote(username, safe='')}/collections/{subject_id}",
         )
         return UserSubjectCollection.from_api(payload)
+
+    def get_user_collections(
+        self,
+        username: str,
+        *,
+        subject_type: SubjectType | None = None,
+        collection_type: SubjectCollectionType | None = None,
+        limit: int = 30,
+        offset: int = 0,
+    ) -> PagedUserSubjectCollections:
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if subject_type is not None:
+            params["subject_type"] = int(subject_type)
+        if collection_type is not None:
+            params["type"] = int(collection_type)
+        payload = self._request_json(
+            "GET",
+            f"/v0/users/{parse.quote(username, safe='')}/collections",
+            params=params,
+        )
+        return PagedUserSubjectCollections.from_api(payload)
 
     def upsert_collection(self, subject_id: int, update: CollectionUpdate) -> None:
         self._request_json(
