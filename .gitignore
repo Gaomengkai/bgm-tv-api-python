@@ -1,0 +1,10 @@
+.venv/
+.uv-cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+token.txt
+dist/
+build/
+*.egg-info/
+pytest-cache-files-*/

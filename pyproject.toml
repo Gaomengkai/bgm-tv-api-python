@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bgmapi"
+version = "0.1.0"
+description = "Typed Bangumi API client with Pydantic models."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Merky" },
+]
+dependencies = [
+  "pydantic>=2.12,<3",
+]
+keywords = ["bangumi", "api", "sdk", "pydantic"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://bangumi.github.io/api/"
+Repository = "https://github.com/bangumi/api"
+
+[dependency-groups]
+dev = [
+  "hatchling>=1.27,<2",
+  "pytest>=8.4,<9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bgmapi"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/LICENSE",
+  "/README.md",
+  "/pyproject.toml",
+  "/examples",
+]
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+pythonpath = ["src"]
+testpaths = ["tests"]
