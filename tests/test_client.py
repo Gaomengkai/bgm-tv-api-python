@@ -10,6 +10,8 @@ from bgmapi import (
     BangumiApiError,
     BangumiClient,
     CollectionUpdate,
+    EpisodeCollectionType,
+    EpisodeCollectionUpdate,
     SubjectCollectionType,
     SubjectType,
 )
@@ -188,3 +190,115 @@ def test_http_error_is_raised_with_parsed_details(
     assert exc_info.value.status_code == 404
     assert exc_info.value.description == "subject not found"
     assert exc_info.value.details == {"path": "/v0/subjects/999999"}
+
+
+def test_get_episode_collection(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        captured["authorization"] = req.get_header("Authorization")
+        return _FakeResponse(
+            json.dumps(
+                {
+                    "episode": {
+                        "id": 1575940,
+                        "subject_id": 515759,
+                        "name": "北部高原の物流",
+                        "name_cn": "北部高原的物流",
+                        "airdate": "2026-02-13",
+                        "ep": 5,
+                        "sort": 33,
+                        "comment": 170,
+                        "type": 0,
+                        "disc": 0,
+                        "duration": "00:24:00",
+                        "duration_seconds": 1440,
+                        "desc": "..."
+                    },
+                    "type": 2,
+                    "updated_at": 1773061592
+                }
+            )
+        )
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(token="token-value", user_agent="tester/bgmapi")
+    result = client.get_episode_collection(1575940)
+
+    assert captured["url"] == "https://api.bgm.tv/v0/users/-/collections/-/episodes/1575940"
+    assert captured["authorization"] == "Bearer token-value"
+    assert result.type == EpisodeCollectionType.DONE
+    assert result.episode.sort == 33
+
+
+def test_get_subject_episode_collections(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        return _FakeResponse(
+            json.dumps(
+                {
+                    "total": 1,
+                    "limit": 30,
+                    "offset": 0,
+                    "data": [
+                        {
+                            "episode": {
+                                "id": 1575940,
+                                "subject_id": 515759,
+                                "name": "北部高原の物流",
+                                "name_cn": "北部高原的物流",
+                                "airdate": "2026-02-13",
+                                "ep": 5,
+                                "sort": 33,
+                                "comment": 170,
+                                "type": 0,
+                                "disc": 0,
+                                "duration": "00:24:00",
+                                "duration_seconds": 1440,
+                                "desc": "..."
+                            },
+                            "type": 2,
+                            "updated_at": 1773061592
+                        }
+                    ]
+                }
+            )
+        )
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(token="token-value", user_agent="tester/bgmapi")
+    result = client.get_subject_episode_collections(515759)
+
+    assert captured["url"] == "https://api.bgm.tv/v0/users/-/collections/515759/episodes?limit=30&offset=0"
+    assert result.total == 1
+    assert result.data[0].episode.id == 1575940
+    assert result.data[0].type == EpisodeCollectionType.DONE
+
+
+def test_put_episode_collection(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["method"] = req.get_method()
+        captured["url"] = req.full_url
+        captured["authorization"] = req.get_header("Authorization")
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return _FakeResponse("")
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(token="token-value", user_agent="tester/bgmapi")
+    client.put_episode_collection(
+        1575940,
+        EpisodeCollectionUpdate(type=EpisodeCollectionType.DONE),
+    )
+
+    assert captured["method"] == "PUT"
+    assert captured["url"] == "https://api.bgm.tv/v0/users/-/collections/-/episodes/1575940"
+    assert captured["authorization"] == "Bearer token-value"
+    assert captured["body"] == {"type": 2}

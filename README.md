@@ -40,6 +40,26 @@ print(subject.name_cn or subject.name)
 print(results.total)
 ```
 
+
+## Episode collection example
+
+For anime progress, Bangumi episode state is managed via episode collection endpoints rather than `collection.ep_status`.
+
+```python
+from bgmapi import BangumiClient, EpisodeCollectionType, EpisodeCollectionUpdate
+
+client = BangumiClient.from_token_file(
+    "token.txt",
+    user_agent="yourname/bgmapi-sdk-example (https://github.com/yourname/yourrepo)",
+)
+
+# Mark subject 515759 episode sort 33 as watched after resolving the episode id.
+client.put_episode_collection(
+    1575940,
+    EpisodeCollectionUpdate(type=EpisodeCollectionType.DONE),
+)
+```
+
 ## Notes
 
 - Bangumi recommends a descriptive `User-Agent` containing developer identity and app name.

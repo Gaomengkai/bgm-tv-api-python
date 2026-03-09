@@ -9,6 +9,9 @@ from .exceptions import BangumiApiError
 from .models import (
     CollectionUpdate,
     CurrentUser,
+    EpisodeCollection,
+    EpisodeCollectionUpdate,
+    PagedEpisodeCollections,
     PagedSubjects,
     PagedUserSubjectCollections,
     SearchSort,
@@ -125,6 +128,41 @@ class BangumiClient:
         self._request_json(
             "PATCH",
             f"/v0/users/-/collections/{subject_id}",
+            json_body=update.to_payload(),
+            require_auth=True,
+        )
+
+    def get_episode_collection(self, episode_id: int) -> EpisodeCollection:
+        payload = self._request_json(
+            "GET",
+            f"/v0/users/-/collections/-/episodes/{episode_id}",
+            require_auth=True,
+        )
+        return EpisodeCollection.from_api(payload)
+
+    def get_subject_episode_collections(
+        self,
+        subject_id: int,
+        *,
+        limit: int = 30,
+        offset: int = 0,
+    ) -> PagedEpisodeCollections:
+        payload = self._request_json(
+            "GET",
+            f"/v0/users/-/collections/{subject_id}/episodes",
+            params={"limit": limit, "offset": offset},
+            require_auth=True,
+        )
+        return PagedEpisodeCollections.from_api(payload)
+
+    def put_episode_collection(
+        self,
+        episode_id: int,
+        update: EpisodeCollectionUpdate,
+    ) -> None:
+        self._request_json(
+            "PUT",
+            f"/v0/users/-/collections/-/episodes/{episode_id}",
             json_body=update.to_payload(),
             require_auth=True,
         )
