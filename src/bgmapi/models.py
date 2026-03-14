@@ -233,3 +233,51 @@ class CollectionUpdate(ApiModel):
 
     def to_payload(self) -> dict[str, Any]:
         return self.model_dump(exclude_none=True, mode="json")
+
+
+class Episode(ApiModel):
+    airdate: str | None = None
+    name: str
+    name_cn: str
+    duration: str | None = None
+    desc: str | None = None
+    ep: int
+    sort: int | float
+    id: int
+    subject_id: int
+    comment: int
+    type: int
+    disc: int
+    duration_seconds: int | None = None
+
+
+class EpisodeCollectionType(IntEnum):
+    NA = 0
+    WISH = 1
+    DONE = 2
+    DROPPED = 3
+
+
+class EpisodeCollection(ApiModel):
+    episode: Episode
+    type: EpisodeCollectionType
+    updated_at: int
+
+
+class PagedEpisodeCollections(ApiModel):
+    total: int = 0
+    limit: int = 0
+    offset: int = 0
+    data: list[EpisodeCollection] = Field(default_factory=list)
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _default_data(cls, value: Any) -> Any:
+        return [] if value is None else value
+
+
+class EpisodeCollectionUpdate(ApiModel):
+    type: EpisodeCollectionType
+
+    def to_payload(self) -> dict[str, Any]:
+        return self.model_dump(exclude_none=True, mode="json")
