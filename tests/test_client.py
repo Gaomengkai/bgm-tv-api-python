@@ -225,6 +225,9 @@ def test_get_user_subject_episode_collections(
     assert page.total == 2
     assert page.data[0].episode.id == 1600428
     assert int(page.data[0].type) == 2
+    assert int(page.data[1].type) == 0
+    assert page.data[1].type == EpisodeCollectionType.NA
+    assert page.data[1].episode.ep == 10
 
 
 def test_patch_user_subject_episode_collections(

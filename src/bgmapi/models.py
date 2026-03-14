@@ -24,6 +24,7 @@ class SubjectCollectionType(IntEnum):
 
 
 class EpisodeCollectionType(IntEnum):
+    NA = 0
     WISH = 1
     DONE = 2
     DROPPED = 3
@@ -34,6 +35,9 @@ class EpType(IntEnum):
     SP = 1
     OP = 2
     ED = 3
+    PROMO = 4
+    MAD = 5
+    OTHER = 6
 
 
 class UserGroup(IntEnum):
@@ -215,7 +219,7 @@ class Episode(ApiModel):
     name: str
     name_cn: str
     sort: float
-    ep: float | None = None
+    ep: int | None = None
     airdate: str
     comment: int
     duration: str
