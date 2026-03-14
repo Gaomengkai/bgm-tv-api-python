@@ -65,3 +65,26 @@ client.put_episode_collection(
 - Bangumi recommends a descriptive `User-Agent` containing developer identity and app name.
 - The example script is in `examples/basic.py`.
 - The client uses `Authorization: Bearer <token>` for authenticated endpoints.
+
+## Episode progress
+
+The client also supports anime episode collection/progress endpoints:
+
+```python
+from bgmapi import BangumiClient, EpisodeCollectionType
+
+client = BangumiClient.from_token_file(
+    "token.txt",
+    user_agent="yourname/bgmapi-sdk-example (https://github.com/yourname/yourrepo)",
+)
+
+subject_id = 526979
+page = client.get_user_subject_episode_collections(subject_id)
+
+# Mark episodes as watched; Bangumi recalculates the subject progress.
+client.patch_user_subject_episode_collections(
+    subject_id,
+    [1600420, 1600421, 1600429],
+    collection_type=EpisodeCollectionType.DONE,
+)
+```

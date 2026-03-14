@@ -23,6 +23,23 @@ class SubjectCollectionType(IntEnum):
     DROPPED = 5
 
 
+class EpisodeCollectionType(IntEnum):
+    NA = 0
+    WISH = 1
+    DONE = 2
+    DROPPED = 3
+
+
+class EpType(IntEnum):
+    MAIN = 0
+    SP = 1
+    OP = 2
+    ED = 3
+    PROMO = 4
+    MAD = 5
+    OTHER = 6
+
+
 class UserGroup(IntEnum):
     ADMIN = 1
     BANGUMI_ADMIN = 2
@@ -194,6 +211,40 @@ class UserSubjectCollection(ApiModel):
     updated_at: datetime
     private: bool
     subject: SlimSubject | None = None
+
+
+class Episode(ApiModel):
+    id: int
+    type: EpType | int
+    name: str
+    name_cn: str
+    sort: float
+    ep: int | None = None
+    airdate: str
+    comment: int
+    duration: str
+    desc: str
+    disc: int
+    duration_seconds: int | None = None
+    subject_id: int | None = None
+
+
+class UserEpisodeCollection(ApiModel):
+    episode: Episode
+    type: EpisodeCollectionType | int
+    updated_at: int
+
+
+class PagedUserEpisodeCollections(ApiModel):
+    total: int = 0
+    limit: int = 0
+    offset: int = 0
+    data: list[UserEpisodeCollection] = Field(default_factory=list)
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _default_data(cls, value: Any) -> Any:
+        return [] if value is None else value
 
 
 class PagedUserSubjectCollections(ApiModel):

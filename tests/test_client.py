@@ -161,6 +161,105 @@ def test_get_user_collections_sends_filters(
     assert result.data[0].subject.name_cn == "测试条目"
 
 
+def test_get_user_subject_episode_collections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        return _FakeResponse(
+            json.dumps(
+                {
+                    "total": 2,
+                    "limit": 100,
+                    "offset": 0,
+                    "data": [
+                        {
+                            "episode": {
+                                "id": 1600428,
+                                "type": 0,
+                                "name": "屠夫格鲁修",
+                                "name_cn": "屠夫格鲁修",
+                                "sort": 9,
+                                "ep": 9,
+                                "airdate": "2026-03-06",
+                                "comment": 0,
+                                "duration": "24m",
+                                "desc": "",
+                                "disc": 0,
+                                "subject_id": 526979
+                            },
+                            "type": 2,
+                            "updated_at": 1741910000
+                        },
+                        {
+                            "episode": {
+                                "id": 1600429,
+                                "type": 0,
+                                "name": "贵族的义务",
+                                "name_cn": "贵族的义务",
+                                "sort": 10,
+                                "ep": 10,
+                                "airdate": "2026-03-13",
+                                "comment": 0,
+                                "duration": "24m",
+                                "desc": "",
+                                "disc": 0,
+                                "subject_id": 526979
+                            },
+                            "type": 0,
+                            "updated_at": 0
+                        }
+                    ]
+                }
+            )
+        )
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(token="token-value", user_agent="tester/bgmapi")
+    page = client.get_user_subject_episode_collections(526979)
+
+    assert captured["url"] == "https://api.bgm.tv/v0/users/-/collections/526979/episodes?limit=100&offset=0"
+    assert page.total == 2
+    assert page.data[0].episode.id == 1600428
+    assert int(page.data[0].type) == 2
+    assert int(page.data[1].type) == 0
+    assert page.data[1].type == EpisodeCollectionType.NA
+    assert page.data[1].episode.ep == 10
+
+
+def test_patch_user_subject_episode_collections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        captured["method"] = req.get_method()
+        captured["authorization"] = req.get_header("Authorization")
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return _FakeResponse("")
+
+    monkeypatch.setattr("bgmapi.client.request.urlopen", fake_urlopen)
+
+    client = BangumiClient(token="token-value", user_agent="tester/bgmapi")
+    client.patch_user_subject_episode_collections(
+        526979,
+        [1600420, 1600421, 1600429],
+        collection_type=EpisodeCollectionType.DONE,
+    )
+
+    assert captured["url"] == "https://api.bgm.tv/v0/users/-/collections/526979/episodes"
+    assert captured["method"] == "PATCH"
+    assert captured["authorization"] == "Bearer token-value"
+    assert captured["body"] == {
+        "episode_id": [1600420, 1600421, 1600429],
+        "type": 2,
+    }
+
+
 def test_http_error_is_raised_with_parsed_details(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
