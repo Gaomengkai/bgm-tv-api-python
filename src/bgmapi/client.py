@@ -10,9 +10,10 @@ from .models import (
     CollectionUpdate,
     CurrentUser,
     EpisodeCollection,
+    EpisodeCollectionType,
     EpisodeCollectionUpdate,
     PagedEpisodeCollections,
-    PagedSubjects,
+    PagedUserEpisodeCollections,
     PagedUserSubjectCollections,
     SearchSort,
     Subject,
@@ -165,6 +166,38 @@ class BangumiClient:
             f"/v0/users/-/collections/-/episodes/{episode_id}",
             json_body=update.to_payload(),
             require_auth=True,
+        )
+
+    def get_user_subject_episode_collections(
+        self,
+        subject_id: int,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        episode_type: int | None = None,
+    ) -> PagedUserEpisodeCollections:
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if episode_type is not None:
+            params["episode_type"] = episode_type
+        payload = self._request_json(
+            "GET",
+            f"/v0/users/-/collections/{subject_id}/episodes",
+            params=params,
+            require_auth=True,
+        )
+        return PagedUserEpisodeCollections.from_api(payload)
+
+    def patch_user_subject_episode_collections(
+        self,
+        subject_id: int,
+        episode_ids: list[int],
+        *,
+        collection_type: EpisodeCollectionType = EpisodeCollectionType.DONE,
+    ) -> None:
+        self._request_json(
+            "PATCH",
+            f"/v0/users/-/collections/{subject_id}/episodes",
+            json_body={"episode_id": episode_ids, "type": int(collection_type)},
         )
 
     def _request_json(
